@@ -24,6 +24,8 @@ public class Compiler {
     private static HashMap<String, Integer> classNames = new HashMap<String, Integer>();
     private static Integer n;
 
+    static int visited[] ;
+
     public static void main(String[] args) throws FileNotFoundException, IOException {
         Scanner fileIn = new Scanner(new File("compiler.in"));
         n = fileIn.nextInt();
@@ -41,48 +43,45 @@ public class Compiler {
             graph.get(classNames.get(className)).add(i);
         }
         
-
-        
         FileWriter fileWriter = new FileWriter("compiler.out");
         PrintWriter printWriter = new PrintWriter(fileWriter);
         
-        for(int i=1; i<=n; i++){
-            printWriter.println(i + ": ");
-            for(int j=0; j<graph.get(i).size(); j++)
-                printWriter.println(graph.get(i).get(j));
-        }
-        
-        printWriter.println();
-        printWriter.close();
-        
-        boolean visited[] = new boolean[n+1];
-        if(isCyclic(1, visited))
-            System.out.print("Cycle detected!"); 
+        visited = new int[n+1];
+        if(isCyclic(1))
+            printWriter.println(cycleDetected); 
         else
-            System.out.print("Compute max length"); 
+        {
+            int max = 0;
+            for(int i=1; i<n+1; i++){
+                if(max<visited[i])
+                    max = visited[i];
+            }
+            printWriter.println(max+2);
+        }
+        printWriter.close();
     }
-    
-    private static boolean isCyclic(int v, boolean visited[]){
+    private static boolean isCyclic(int v) {
         
         ArrayList<Integer> verticesAdjacentToV = graph.get(v);
         
         for(int i=0; i<verticesAdjacentToV.size(); i++) {
-            if(!visited[verticesAdjacentToV.get(i)])
-                if(isCyclicUtil(verticesAdjacentToV.get(i), visited, -1))
+            if(visited[verticesAdjacentToV.get(i)] == 0)
+                if(isCyclicUtil(verticesAdjacentToV.get(i), -1))
                     return true;
         }
         return false;
     }
     
-    private static boolean isCyclicUtil(int v, boolean visited[], int parent){
-        visited[v] = true; 
+    private static boolean isCyclicUtil(int v, int parent){
+        if(parent == -1)
+            visited[v] = 1; 
+        else
+            visited[v] = visited[parent] + 1;
         
-        ArrayList<Integer> verticesAdjacentToV = graph.get(v);
-        
-        for(int i=0; i<verticesAdjacentToV.size(); i++) {
-            if(!visited[verticesAdjacentToV.get(i)]){
-                int vv = verticesAdjacentToV.get(i);
-                if(isCyclicUtil(vv, visited, v))
+        for(int i=0; i<graph.get(v).size(); i++) {
+            if(visited[graph.get(v).get(i)] == 0){
+                int vv = graph.get(v).get(i);
+                if(isCyclicUtil(vv, v))
                     return true;
             } else if (i != parent) 
                 return true; 
